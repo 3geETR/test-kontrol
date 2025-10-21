@@ -97,6 +97,12 @@
                                 <option value="Diğer">Diğer</option>
                             </select>
                         </div>
+
+                        <!-- Kaynak/Yayın Adı (Opsiyonel) -->
+                        <div>
+                            <label for="source" class="block text-sm font-medium text-gray-700 mb-1">📖 Kaynak/Yayın Adı (Opsiyonel)</label>
+                            <input type="text" id="source" placeholder="Örn: Fenomen Yayınları Kitabı, Deneme 5" class="w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                        </div>
                     </div>
 
                     <!-- Sonuç Sayaçları Grubu -->
@@ -104,18 +110,21 @@
                         <!-- Doğru Sayısı -->
                         <div class="col-span-1">
                             <label for="correct" class="block text-sm font-medium text-green-700 mb-1 text-center">✅ Doğru</label>
+                            <!-- on-focus/on-blur ile sıfırları temizleme özelliği eklendi -->
                             <input type="number" id="correct" required min="0" value="0" class="w-full p-4 border-2 border-green-500 bg-green-50 text-green-800 text-2xl font-extrabold text-center rounded-xl focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-md">
                         </div>
                         
                         <!-- Yanlış Sayısı -->
                         <div class="col-span-1">
                             <label for="wrong" class="block text-sm font-medium text-red-700 mb-1 text-center">❌ Yanlış</label>
+                            <!-- on-focus/on-blur ile sıfırları temizleme özelliği eklendi -->
                             <input type="number" id="wrong" required min="0" value="0" class="w-full p-4 border-2 border-red-500 bg-red-50 text-red-800 text-2xl font-extrabold text-center rounded-xl focus:ring-red-500 focus:border-red-500 transition duration-150 shadow-md">
                         </div>
                         
                         <!-- Boş Sayısı -->
                         <div class="col-span-1">
                             <label for="empty" class="block text-sm font-medium text-yellow-700 mb-1 text-center">➖ Boş</label>
+                            <!-- on-focus/on-blur ile sıfırları temizleme özelliği eklendi -->
                             <input type="number" id="empty" required min="0" value="0" class="w-full p-4 border-2 border-yellow-500 bg-yellow-50 text-yellow-800 text-2xl font-extrabold text-center rounded-xl focus:ring-yellow-500 focus:border-yellow-500 transition duration-150 shadow-md">
                         </div>
                     </div>
@@ -152,9 +161,77 @@
         <div class="bg-white p-6 rounded-lg shadow-2xl max-w-sm w-full transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
             <h3 id="modalTitle" class="text-lg font-bold text-gray-800 mb-3">Bilgi</h3>
             <p id="modalMessage" class="text-gray-700 mb-4"></p>
-            <div class="flex justify-end">
-                <button onclick="closeModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Kapat</button>
+            <!-- DÜZELTME: Aksiyon butonları için özel container -->
+            <div id="modalActions" class="flex justify-end space-x-3">
+                <button id="modalDefaultCloseButton" onclick="closeModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Kapat</button>
             </div>
+        </div>
+    </div>
+    
+    <!-- YENİ EKLENEN: DÜZENLEME MODALI -->
+    <div id="editEntryModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-lg w-full transform transition-all duration-300 scale-95 opacity-0" id="editModalContent">
+            <h3 class="text-xl font-bold text-indigo-700 mb-4 border-b pb-2">Kaydı Düzenle</h3>
+            <form id="editForm" onsubmit="event.preventDefault(); updateEntry(event)">
+                <input type="hidden" id="edit-id">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <!-- Tarih -->
+                    <div>
+                        <label for="edit-date" class="block text-sm font-medium text-gray-700 mb-1">📅 Test Tarihi</label>
+                        <input type="date" id="edit-date" required class="w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    
+                    <!-- Ders -->
+                    <div>
+                        <label for="edit-subject" class="block text-sm font-medium text-gray-700 mb-1">📚 Ders Seçimi</label>
+                        <select id="edit-subject" required class="w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white">
+                            <option value="Türkçe">Türkçe</option>
+                            <option value="Din">Din Kültürü</option>
+                            <option value="Paragraf">Paragraf</option>
+                            <option value="Matematik">Matematik</option>
+                            <option value="İnkılap">İnkılap Tarihi</option>
+                            <option value="Fen">Fen Bilimleri</option>
+                            <option value="Sosyal">Sosyal Bilgiler</option>
+                            <option value="İngilizce">İngilizce</option>
+                            <option value="Diğer">Diğer</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Kaynak -->
+                <div class="mb-4">
+                    <label for="edit-source" class="block text-sm font-medium text-gray-700 mb-1">📖 Kaynak/Yayın Adı (Opsiyonel)</label>
+                    <input type="text" id="edit-source" placeholder="Örn: Fenomen Yayınları Kitabı" class="w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                
+                <!-- Sonuç Sayaçları Grubu -->
+                <div class="grid grid-cols-3 gap-4">
+                    <!-- Doğru Sayısı -->
+                    <div>
+                        <label for="edit-correct" class="block text-sm font-medium text-green-700 mb-1 text-center">✅ Doğru</label>
+                        <input type="number" id="edit-correct" required min="0" class="w-full p-3 border-2 border-green-500 bg-green-50 text-green-800 text-xl font-extrabold text-center rounded-lg focus:ring-green-500 focus:border-green-500">
+                    </div>
+                    
+                    <!-- Yanlış Sayısı -->
+                    <div>
+                        <label for="edit-wrong" class="block text-sm font-medium text-red-700 mb-1 text-center">❌ Yanlış</label>
+                        <input type="number" id="edit-wrong" required min="0" class="w-full p-3 border-2 border-red-500 bg-red-50 text-red-800 text-xl font-extrabold text-center rounded-lg focus:ring-red-500 focus:border-red-500">
+                    </div>
+                    
+                    <!-- Boş Sayısı -->
+                    <div>
+                        <label for="edit-empty" class="block text-sm font-medium text-yellow-700 mb-1 text-center">➖ Boş</label>
+                        <input type="number" id="edit-empty" required min="0" class="w-full p-3 border-2 border-yellow-500 bg-yellow-50 text-yellow-800 text-xl font-extrabold text-center rounded-lg focus:ring-yellow-500 focus:border-yellow-500">
+                    </div>
+                </div>
+
+                <!-- Aksiyon Butonları -->
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeEditModal()" class="px-5 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition">İptal</button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition">Değişiklikleri Kaydet</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -163,6 +240,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         // Google Auth için gerekli yeni modüller eklendi
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserLocalPersistence, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // setDoc setDoc olarak kullanıldı, daha önce addDoc vardı, doc, updateDoc (kullanılacak) eklendi
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, setDoc, doc, deleteDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global değişkenler zorunlu olarak burada tanımlanmıştır.
@@ -177,6 +255,7 @@
         let auth;
         let userId = null;
         let isAuthReady = false;
+        let allEntriesMap = new Map(); // Tüm girişleri ID'ye göre saklamak için harita
         
         // UI Elementleri
         const resultsContainer = document.getElementById('resultsContainer');
@@ -192,14 +271,26 @@
         const signOutButton = document.getElementById('signOutButton');
         const inputSection = document.getElementById('inputSection');
         const dashboardSection = document.getElementById('dashboardSection');
+        
+        // DÜZELTME İÇİN EK LİSTELER
+        const modalActions = document.getElementById('modalActions');
+        const modalDefaultCloseButton = document.getElementById('modalDefaultCloseButton');
 
 
         // Modal Fonksiyonları
+        // DÜZELTME: showModal artık sadece mesajı gösterir ve varsayılan butonu ayarlar.
         function showModal(title, message) {
             const modal = document.getElementById('messageModal');
             const content = document.getElementById('modalContent');
+            
             document.getElementById('modalTitle').textContent = title;
             document.getElementById('modalMessage').innerHTML = message;
+            
+            // Varsayılan butonu göster ve modalActions'ı temizle/hazırla
+            modalActions.innerHTML = '';
+            modalActions.appendChild(modalDefaultCloseButton);
+            modalDefaultCloseButton.classList.remove('hidden');
+
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             
@@ -220,6 +311,18 @@
             }, 300);
         }
         
+        // YENİ: Düzenleme Modalı Kapatma
+        window.closeEditModal = function() {
+            const modal = document.getElementById('editEntryModal');
+            const content = document.getElementById('editModalContent');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
         // Google ile Giriş Yapma Fonksiyonu
         window.signInWithGoogle = async function() {
             const provider = new GoogleAuthProvider();
@@ -340,6 +443,7 @@
 
             const date = document.getElementById('date').value;
             const subject = document.getElementById('subject').value;
+            const source = document.getElementById('source').value.trim(); // Kaynak/Yayın Adı
             const correct = parseInt(document.getElementById('correct').value) || 0;
             const wrong = parseInt(document.getElementById('wrong').value) || 0;
             const empty = parseInt(document.getElementById('empty').value) || 0;
@@ -370,6 +474,7 @@
                 const testData = {
                     date: date,
                     subject: subject,
+                    source: source, // Kaynak bilgisi eklendi
                     correct: correct,
                     wrong: wrong,
                     empty: empty,
@@ -382,11 +487,13 @@
                 
                 form.reset();
                 document.getElementById('date').valueAsDate = new Date();
+                // Reset sonrası, input clearing özelliği için value'leri tekrar 0 yapıyoruz.
                 document.getElementById('correct').value = 0;
                 document.getElementById('wrong').value = 0;
                 document.getElementById('empty').value = 0;
+                document.getElementById('source').value = ''; // Kaynak temizlendi
 
-                showModal("Başarılı", `<strong>${formatDate(date)}</strong> tarihinde <strong>${subject}</strong> dersi için <strong>${total} soruluk</strong> giriş başarıyla kaydedildi.`);
+                showModal("Başarılı", `<strong>${formatDate(date)}</strong> tarihinde <strong>${subject}</strong> dersi için <strong>${total} soruluk</strong> giriş başarıyla kaydedildi.${source ? '<br>Kaynak: <strong>' + source + '</strong>' : ''}`);
             } catch (error) {
                 console.error("Veri kaydetme hatası: ", error);
                 showModal("Hata", "Veri kaydedilirken bir sorun oluştu. Konsolu kontrol edin.");
@@ -400,20 +507,27 @@
         function setupDataListener() {
             if (!db || !userId) return;
 
-            // Önceki listener'ları temizlemek faydalı olabilir, ancak onAuthStateChanged zaten tekrar tekrar çağrılmadığı için genellikle sorun olmaz.
             // Yeni bir snapshot listener kurulur.
             const collectionPath = `artifacts/${appId}/users/${userId}/test_tracker`;
-            const q = query(collection(db, collectionPath), orderBy("date", "desc"));
+            
+            // HATA DÜZELTME: İkinci orderBy("timestamp", "desc") kaldırıldı.
+            // Bu, bileşik indeks gereksinimini ortadan kaldırarak Firestore okuma hatasını çözer.
+            // YYYY-MM-DD string formatında sıralama yeterli olacaktır.
+            const q = query(collection(db, collectionPath), orderBy("date", "desc")); 
 
             onSnapshot(q, (snapshot) => {
                 const testEntries = [];
+                allEntriesMap.clear(); // Her snapshot'ta haritayı temizle
                 snapshot.forEach((doc) => {
-                    testEntries.push({ id: doc.id, ...doc.data() });
+                    const entry = { id: doc.id, ...doc.data() };
+                    testEntries.push(entry);
+                    allEntriesMap.set(doc.id, entry); // Haritaya ekle
                 });
                 renderResults(testEntries);
             }, (error) => {
                 console.error("Veri çekme hatası: ", error);
                 loadingMessage.textContent = "Veriler yüklenirken bir hata oluştu. Lütfen konsolu kontrol edin.";
+                // Hata mesajı gösterimi
                 showModal("Hata", "Test sonuçları çekilirken bir sorun oluştu. Hata mesajı için konsolu kontrol edin.");
             });
         }
@@ -448,6 +562,8 @@
                 return;
             }
 
+            // Not: Firestore'dan zaten orderBy("date", "desc") ile çekildiği için
+            // Sadece gruplama yapmamız yeterli.
             const groupedByDate = entries.reduce((acc, entry) => {
                 (acc[entry.date] = acc[entry.date] || []).push(entry);
                 return acc;
@@ -459,6 +575,14 @@
                 const dateColumn = document.createElement('div');
                 dateColumn.className = 'w-72 flex-shrink-0 bg-white border border-gray-200 rounded-xl shadow-md p-4 space-y-3';
                 
+                // groupedByDate[date] dizisi şu an sadece Firestore'dan gelme sırasına göre sıralıdır.
+                // İstenirse aynı gün içindeki kayıtları zaman damgasına göre JavaScript içinde sıralayabiliriz,
+                // ancak şimdilik Firestore'dan gelen sıralamayı kullanıyoruz.
+                const sortedEntries = groupedByDate[date]; 
+                
+                // Günlük Toplam Soru Sayısını Hesapla
+                const totalDailyQuestions = sortedEntries.reduce((sum, entry) => sum + entry.total, 0);
+
                 const dateHeader = document.createElement('h3');
                 let headerText = formatDate(date);
                 const today = new Date().toISOString().split('T')[0];
@@ -475,9 +599,13 @@
                 dateHeader.innerHTML = headerText;
                 dateColumn.appendChild(dateHeader);
                 
-                // Eklenme zamanına göre (timestamp) sırala (en son eklenen üste)
-                const sortedEntries = groupedByDate[date].sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
-                
+                // Toplam Soru Sayısı Ekranı
+                const totalQuestionsDisplay = document.createElement('p');
+                totalQuestionsDisplay.className = 'text-sm font-semibold text-indigo-600 mb-2';
+                totalQuestionsDisplay.innerHTML = `Çözülen Soru: <span class="text-xl font-extrabold">${totalDailyQuestions}</span>`;
+                dateColumn.appendChild(totalQuestionsDisplay);
+
+
                 const visibleEntries = sortedEntries.slice(0, 3);
                 const hiddenEntries = sortedEntries.slice(3);
 
@@ -523,17 +651,32 @@
             
             const total = entry.total; // total zaten hesaplanıp kaydedilmiş
             const successRate = ((entry.correct / total) * 100).toFixed(1);
+            
+            // Kaynak bilgisini kontrol et ve göster
+            const sourceHtml = entry.source && entry.source.length > 0
+                ? `<p class="text-xs text-gray-500 italic mb-1 truncate" title="${entry.source}">${entry.source}</p>`
+                : '';
 
             entryDiv.innerHTML = `
-                <div class="flex justify-between items-start mb-2">
+                <div class="flex justify-between items-start mb-1">
                     <p class="text-base font-semibold text-indigo-700 leading-tight">${entry.subject}</p>
-                    <button onclick="confirmDelete('${entry.id}', '${entry.subject}', ${total}, '${date}')" 
-                            class="text-gray-400 hover:text-red-600 transition duration-150 p-1 rounded-full flex-shrink-0"
-                            title="Kaydı Sil">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </button>
+                    <div class="flex space-x-2">
+                        <!-- YENİ DÜZENLE BUTONU -->
+                        <button onclick="openEditModal('${entry.id}')" 
+                                class="text-gray-400 hover:text-indigo-600 transition duration-150 p-1 rounded-full flex-shrink-0"
+                                title="Kaydı Düzenle">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        </button>
+                        <!-- SİLME BUTONU -->
+                        <button onclick="confirmDelete('${entry.id}', '${entry.subject}', ${total}, '${date}')" 
+                                class="text-gray-400 hover:text-red-600 transition duration-150 p-1 rounded-full flex-shrink-0"
+                                title="Kaydı Sil">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
                 </div>
-                <div class="flex justify-between text-sm font-medium text-gray-700">
+                ${sourceHtml}
+                <div class="flex justify-between text-sm font-medium text-gray-700 mt-1">
                     <span>Toplam Soru:</span> <span class="font-bold">${total}</span>
                 </div>
                 <div class="flex justify-between text-sm font-bold ${successRate >= 75 ? 'text-green-600' : successRate >= 50 ? 'text-yellow-600' : 'text-red-600'}">
@@ -549,19 +692,25 @@
         }
         
         // Silme Onay Modalı
+        // DÜZELTME: Butonlar artık modalActions container'ına dinamik olarak ekleniyor.
         window.confirmDelete = function(id, subject, total, date) {
             const modal = document.getElementById('messageModal');
             const content = document.getElementById('modalContent');
+            const modalActions = document.getElementById('modalActions'); // Aksiyon container'ı
+            
             document.getElementById('modalTitle').textContent = "Kaydı Sil Onayı";
             document.getElementById('modalMessage').innerHTML = `
                 <p class="text-gray-700 mb-4">
                     <strong>${formatDate(date)}</strong> tarihli <strong>${subject}</strong> dersine ait <strong>${total} soruluk</strong> kaydı silmek istediğinizden emin misiniz?
                 </p>
-                <div class="flex justify-end space-x-3">
-                    <button onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">İptal</button>
-                    <button onclick="deleteEntry('${id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Evet, Sil</button>
-                </div>
+            `; // Mesaj içeriği
+
+            // Sadece özel butonları göster
+            modalActions.innerHTML = `
+                <button onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">İptal</button>
+                <button onclick="deleteEntry('${id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Evet, Sil</button>
             `;
+
             modal.classList.remove('hidden');
             modal.classList.add('flex');
              setTimeout(() => {
@@ -587,7 +736,118 @@
             }
         }
         
-        // Uygulama yüklendiğinde bugünün tarihini varsayılan olarak ayarla
+        // YENİ EKLENEN: Kayıt Düzenleme İşlemi
+        window.openEditModal = function(id) {
+            const entry = allEntriesMap.get(id);
+            if (!entry) {
+                showModal("Hata", "Düzenlenecek kayıt bulunamadı.");
+                return;
+            }
+            
+            // Formu doldur
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-date').value = entry.date;
+            document.getElementById('edit-subject').value = entry.subject;
+            document.getElementById('edit-source').value = entry.source || '';
+            document.getElementById('edit-correct').value = entry.correct;
+            document.getElementById('edit-wrong').value = entry.wrong;
+            document.getElementById('edit-empty').value = entry.empty;
+            
+            // Modalı Göster
+            const modal = document.getElementById('editEntryModal');
+            const content = document.getElementById('editModalContent');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        window.updateEntry = async function(e) {
+            e.preventDefault();
+            if (!isAuthReady || !userId) {
+                showModal("Hata", "Oturum açılmamış veya veriler yükleniyor, lütfen bekleyin.");
+                return;
+            }
+            
+            const id = document.getElementById('edit-id').value;
+            const date = document.getElementById('edit-date').value;
+            const subject = document.getElementById('edit-subject').value;
+            const source = document.getElementById('edit-source').value.trim();
+            const correct = parseInt(document.getElementById('edit-correct').value) || 0;
+            const wrong = parseInt(document.getElementById('edit-wrong').value) || 0;
+            const empty = parseInt(document.getElementById('edit-empty').value) || 0;
+            
+            const total = correct + wrong + empty;
+
+            if (correct < 0 || wrong < 0 || empty < 0) {
+                 showModal("Uyarı", "Sayılar sıfırdan küçük olamaz.");
+                 return;
+            }
+
+            if (total === 0) {
+                showModal("Uyarı", "Doğru, yanlış ve boş toplamı 0 olamaz. Lütfen değerleri girin.");
+                return;
+            }
+            
+            try {
+                const docRef = doc(db, `artifacts/${appId}/users/${userId}/test_tracker`, id);
+                
+                // Güncellenecek veri nesnesi
+                const updatedData = {
+                    date: date,
+                    subject: subject,
+                    source: source,
+                    correct: correct,
+                    wrong: wrong,
+                    empty: empty,
+                    total: total,
+                    updatedAt: serverTimestamp() 
+                };
+
+                // setDoc ile merge: true kullanarak güncelleme yapıyoruz.
+                await setDoc(docRef, updatedData, { merge: true }); 
+                
+                closeEditModal();
+                showModal("Başarılı", `<strong>${formatDate(date)}</strong> tarihli kayıt başarıyla güncellendi.`);
+                
+            } catch (error) {
+                console.error("Kayıt güncelleme hatası: ", error);
+                showModal("Hata", "Kayıt güncellenirken bir sorun oluştu. Konsolu kontrol edin.");
+            }
+        }
+
+        // Doğru/Yanlış/Boş inputlarına odaklanıldığında '0'ı silme işlevi
+        function setupInputClearing() {
+            // Ana form inputları ve Düzenleme Modalı inputları
+            const allInputs = [
+                'correct', 'wrong', 'empty', 
+                'edit-correct', 'edit-wrong', 'edit-empty'
+            ];
+
+            allInputs.forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    // Odaklanıldığında ve değer '0' ise içeriği temizle
+                    input.addEventListener('focus', function() {
+                        // Eğer input bir sayı inputuysa ve değeri 0 ise temizle
+                        if (this.type === 'number' && parseInt(this.value) === 0) {
+                            this.value = '';
+                        }
+                    });
+                    // Odak kalktığında ve içerik boş ise değeri tekrar '0' yap
+                    input.addEventListener('blur', function() {
+                        if (this.value === '' || isNaN(parseInt(this.value))) {
+                            this.value = '0';
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Uygulama yüklendiğinde bugünün tarihini varsayılan olarak ayarla ve input clearing'i başlat
         document.addEventListener('DOMContentLoaded', () => {
             const today = new Date();
             const year = today.getFullYear();
@@ -595,6 +855,9 @@
             const day = String(today.getDate()).padStart(2, '0');
             
             document.getElementById('date').value = `${year}-${month}-${day}`;
+
+            setupInputClearing(); // Yeni fonksiyon çağrıldı
+
         });
 
     </script>
