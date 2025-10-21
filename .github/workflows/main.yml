@@ -16,7 +16,7 @@ jobs:
       - name: Inject Firebase API Key
         # sed komutu ile, HTML dosyasındaki yer tutucuyu gizli anahtar ile değiştiriyoruz.
         run: |
-          sed -i 's|// KULLANICININ SAĞLADIĞI YEDEK YAPILANDIRMA|${{ secret.API }}|g' "test 2.html"
+          sed -i 's|// KULLANICININ SAĞLADIĞI YEDEK YAPILANDIRMA|${{ secrets.API }}|g' "test 2.html"
           
       - name: Setup Pages
         uses: actions/configure-pages@v5
