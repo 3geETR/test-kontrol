@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ders Test Takip Uygulaması</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f9;
+        }
+        /* Özel stil: Yatay kaydırma çubuğunu gizle (isteğe bağlı) ve incelt */
+        .scroll-container {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+            scroll-behavior: smooth;
+        }
+        .scroll-container::-webkit-scrollbar {
+            height: 6px; /* Yatay kaydırma çubuğu yüksekliği */
+        }
+        .scroll-container::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1; /* slate-300 */
+            border-radius: 3px;
+        }
+        .scroll-container::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+        /* Sayaç inputları için daha iyi görünüm */
+        input[type="number"] {
+            -moz-appearance: textfield; /* Firefox'ta okları gizler */
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0; /* Chrome, Safari, Edge'de okları gizler */
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-6">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b-4 border-indigo-600 pb-2">Günlük Test Takibi</h1>
+        
+        <!-- YETKİLENDİRME BUTONLARI VE KULLANICI BİLGİSİ -->
+        <div id="authContainer" class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-6">
+            
+            <!-- Kullanıcı Bilgisi (Giriş Yapıldığında Görünür) -->
+            <div id="userInfoDisplay" class="text-sm text-gray-600 p-3 bg-white rounded-lg shadow-sm truncate w-full sm:w-auto hidden">
+                <span class="font-semibold text-gray-800" id="userName">Yükleniyor...</span>
+                <span class="block text-xs text-gray-400 mt-0.5">UID: <span id="userUid"></span></span>
+            </div>
+
+            <div class="flex space-x-3 w-full sm:w-auto justify-end">
+                <!-- Giriş Yap Butonu (Çıkış Yapıldığında Görünür) -->
+                <button id="googleSignInButton" onclick="signInWithGoogle()" class="w-full sm:w-auto px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition duration-200 shadow-lg flex items-center justify-center hidden">
+                    <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M44.5 20h-2.131V18h-1.895v2H24v8h11.5c-1.397 4.197-5.021 7.2-9.5 7.2-6.528 0-11.854-5.326-11.854-11.854s5.326-11.854 11.854-11.854c3.425 0 6.476 1.455 8.68 3.79l2.7-2.7C32.193 9.488 28.3 8 24 8c-9.941 0-18 8.059-18 18s8.059 18 18 18c9.941 0 17.5-7.059 17.5-17.5V20z" fill="#EA4335"/><path d="M6 26c0 9.941 8.059 18 18 18 9.941 0 17.5-7.059 17.5-17.5V20H24v8h11.5c-1.397 4.197-5.021 7.2-9.5 7.2-6.528 0-11.854-5.326-11.854-11.854s5.326-11.854 11.854-11.854c3.425 0 6.476 1.455 8.68 3.79l2.7-2.7C32.193 9.488 28.3 8 24 8c-9.941 0-18 8.059-18 18z" fill="#34A853" clip-path="url(#clip0)"/></svg>
+                    Google ile Giriş Yap
+                </button>
+                
+                <!-- Çıkış Yap Butonu (Giriş Yapıldığında Görünür) -->
+                <button id="signOutButton" onclick="signOutUser()" class="w-full sm:w-auto px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition duration-200 shadow-md hidden">
+                    Çıkış Yap
+                </button>
+            </div>
+        </div>
+
+        <!-- YENİ TEST GİRİŞ FORMU BÖLÜMÜ (Giriş Yapıldığında Görünür) -->
+        <div id="inputSection" class="hidden">
+            <div class="bg-white p-6 rounded-xl shadow-2xl mb-8 border-t-8 border-indigo-500">
+                <h2 class="text-2xl font-bold text-indigo-700 mb-6">Yeni Test Girişi</h2>
+                <form id="testForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    
+                    <!-- Tarih ve Ders Seçimi Grubu -->
+                    <div class="lg:col-span-2 space-y-4">
+                        <!-- Tarih Seçimi -->
+                        <div>
+                            <label for="date" class="block text-sm font-medium text-gray-700 mb-1">📅 Test Tarihi</label>
+                            <input type="date" id="date" required class="w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                        </div>
+                        
+                        <!-- Ders Seçimi -->
+                        <div>
+                            <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">📚 Ders Seçimi</label>
+                            <select id="subject" required class="w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white transition duration-150">
+                                <option value="" disabled selected>Ders Seçiniz</option>
+                                <option value="Türkçe">Türkçe</option>
+                                <option value="Din">Din Kültürü</option>
+                                <option value="Paragraf">Paragraf</option>
+                                <option value="Matematik">Matematik</option>
+                                <option value="İnkılap">İnkılap Tarihi</option>
+                                <option value="Fen">Fen Bilimleri</option>
+                                <option value="Sosyal">Sosyal Bilgiler</option>
+                                <option value="İngilizce">İngilizce</option>
+                                <option value="Diğer">Diğer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Sonuç Sayaçları Grubu -->
+                    <div class="lg:col-span-2 grid grid-cols-3 gap-4">
+                        <!-- Doğru Sayısı -->
+                        <div class="col-span-1">
+                            <label for="correct" class="block text-sm font-medium text-green-700 mb-1 text-center">✅ Doğru</label>
+                            <input type="number" id="correct" required min="0" value="0" class="w-full p-4 border-2 border-green-500 bg-green-50 text-green-800 text-2xl font-extrabold text-center rounded-xl focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-md">
+                        </div>
+                        
+                        <!-- Yanlış Sayısı -->
+                        <div class="col-span-1">
+                            <label for="wrong" class="block text-sm font-medium text-red-700 mb-1 text-center">❌ Yanlış</label>
+                            <input type="number" id="wrong" required min="0" value="0" class="w-full p-4 border-2 border-red-500 bg-red-50 text-red-800 text-2xl font-extrabold text-center rounded-xl focus:ring-red-500 focus:border-red-500 transition duration-150 shadow-md">
+                        </div>
+                        
+                        <!-- Boş Sayısı -->
+                        <div class="col-span-1">
+                            <label for="empty" class="block text-sm font-medium text-yellow-700 mb-1 text-center">➖ Boş</label>
+                            <input type="number" id="empty" required min="0" value="0" class="w-full p-4 border-2 border-yellow-500 bg-yellow-50 text-yellow-800 text-2xl font-extrabold text-center rounded-xl focus:ring-yellow-500 focus:border-yellow-500 transition duration-150 shadow-md">
+                        </div>
+                    </div>
+                    
+                    <!-- Gönder Butonu -->
+                    <div class="col-span-1 sm:col-span-2 lg:col-span-4 flex justify-center mt-2">
+                        <button type="submit" id="submitButton" class="w-full max-w-sm px-8 py-4 bg-indigo-600 text-white font-bold text-lg rounded-xl hover:bg-indigo-700 transition duration-200 ease-in-out shadow-lg hover:shadow-xl transform hover:scale-[1.01] flex items-center justify-center">
+                            <svg id="loadingSpinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Test Sonucunu Kaydet
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- İLERLEME PANOSU BÖLÜMÜ (Giriş Yapıldığında Görünür) -->
+        <div id="dashboardSection" class="hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">İlerleme Panosu <span class="text-sm text-gray-500 font-normal">(Günlük testleriniz burada listelenir)</span></h2>
+            
+            <div id="dashboardContainer" class="overflow-x-auto pb-4 scroll-container">
+                <div id="resultsContainer" class="flex flex-nowrap space-x-6 min-h-64">
+                    <p id="loadingMessage" class="text-center text-gray-500 w-full flex items-center justify-center">Veriler yükleniyor...</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- HATA/BİLGİ MESAJI MODAL -->
+    <div id="messageModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-lg shadow-2xl max-w-sm w-full transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+            <h3 id="modalTitle" class="text-lg font-bold text-gray-800 mb-3">Bilgi</h3>
+            <p id="modalMessage" class="text-gray-700 mb-4"></p>
+            <div class="flex justify-end">
+                <button onclick="closeModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK'ları -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        // Google Auth için gerekli yeni modüller eklendi
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserLocalPersistence, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, setDoc, doc, deleteDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global değişkenler zorunlu olarak burada tanımlanmıştır.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-test-tracker';
+        
+        // KULLANICININ SAĞLADIĞI YEDEK YAPILANDIRMA
+        
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : hardcodedConfigString);
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db;
+        let auth;
+        let userId = null;
+        let isAuthReady = false;
+        
+        // UI Elementleri
+        const resultsContainer = document.getElementById('resultsContainer');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const form = document.getElementById('testForm');
+        const submitButton = document.getElementById('submitButton');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        
+        const userInfoDisplay = document.getElementById('userInfoDisplay');
+        const userNameSpan = document.getElementById('userName');
+        const userUidSpan = document.getElementById('userUid');
+        const googleSignInButton = document.getElementById('googleSignInButton');
+        const signOutButton = document.getElementById('signOutButton');
+        const inputSection = document.getElementById('inputSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+
+
+        // Modal Fonksiyonları
+        function showModal(title, message) {
+            const modal = document.getElementById('messageModal');
+            const content = document.getElementById('modalContent');
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').innerHTML = message;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        window.closeModal = function() {
+            const modal = document.getElementById('messageModal');
+            const content = document.getElementById('modalContent');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 300);
+        }
+        
+        // Google ile Giriş Yapma Fonksiyonu
+        window.signInWithGoogle = async function() {
+            const provider = new GoogleAuthProvider();
+            try {
+                // Giriş yapma penceresini açar
+                await signInWithPopup(auth, provider);
+                // Başarılı girişten sonra onAuthStateChanged tetiklenir ve UI güncellenir.
+            } catch (error) {
+                console.error("Google Girişi Hatası: ", error);
+                if (error.code === 'auth/popup-closed-by-user') {
+                    showModal("Giriş İptal Edildi", "Google giriş penceresini kapattınız.");
+                } else if (error.code === 'auth/cancelled-popup-request') {
+                    // Kullanıcının başka bir pencereyi engellediği durumlar için
+                    showModal("Giriş Engellendi", "Lütfen tarayıcınızın popup (açılır pencere) engelleyicisini devre dışı bırakıp tekrar deneyin.");
+                } else {
+                    showModal("Hata", "Google ile giriş yapılırken bir sorun oluştu. Lütfen tekrar deneyin. Konsolu kontrol edin.");
+                }
+            }
+        }
+        
+        // Çıkış Yapma Fonksiyonu
+        window.signOutUser = async function() {
+            try {
+                await signOut(auth);
+                // Çıkış sonrası onAuthStateChanged tetiklenir ve UI güncellenir.
+            } catch (error) {
+                console.error("Çıkış Yapma Hatası: ", error);
+                showModal("Hata", "Çıkış yapılırken bir sorun oluştu.");
+            }
+        }
+
+
+        // Firebase Başlangıcı
+        try {
+            if (Object.keys(firebaseConfig).length > 0 && firebaseConfig.apiKey) {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                setLogLevel('error'); 
+
+                // Oturum kalıcılığını ayarla (Google girişi için önemli)
+                setPersistence(auth, browserLocalPersistence).catch((error) => {
+                    console.error("Auth Persistence Hatası: ", error);
+                });
+
+                // Yetkilendirme Durumu Değişikliğini Dinle
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        // Kullanıcı Giriş Yapmış
+                        userId = user.uid;
+                        
+                        // UI'ı güncelle
+                        userNameSpan.textContent = user.displayName || user.email || "Anonim Kullanıcı";
+                        userUidSpan.textContent = userId;
+                        userInfoDisplay.classList.remove('hidden');
+                        googleSignInButton.classList.add('hidden');
+                        signOutButton.classList.remove('hidden');
+                        inputSection.classList.remove('hidden');
+                        dashboardSection.classList.remove('hidden');
+
+                        isAuthReady = true;
+                        setupDataListener();
+                        
+                    } else {
+                        // Kullanıcı Çıkış Yapmış veya Henüz Giriş Yapılmamış
+                        userId = null;
+                        isAuthReady = false;
+                        
+                        // UI'ı gizle/göster
+                        userInfoDisplay.classList.add('hidden');
+                        signOutButton.classList.add('hidden');
+                        inputSection.classList.add('hidden');
+                        dashboardSection.classList.remove('hidden'); // Dashboard'u göstermeye devam et, sadece içeriğini değiştir
+                        
+                        resultsContainer.innerHTML = '<div class="w-full flex justify-center items-center"><p class="text-center text-gray-500 p-8 bg-white rounded-xl shadow-inner w-72 flex-shrink-0">Lütfen test kayıtlarınızı görmek ve yeni kayıt girmek için Google ile giriş yapın.</p></div>';
+                        
+                        // Eğer initialAuthToken varsa, otomatik deneme (Canvas ortamı için)
+                        if (initialAuthToken) {
+                            try {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } catch (error) {
+                                console.warn("Custom Token Girişi Başarısız. Google Giriş Butonu Gösteriliyor.");
+                                googleSignInButton.classList.remove('hidden');
+                            }
+                        } else {
+                            // Custom token yoksa, Google giriş butonunu göster
+                            googleSignInButton.classList.remove('hidden');
+                        }
+                    }
+                });
+            } else {
+                console.error("Firebase yapılandırması eksik.");
+                showModal("Hata", "Uygulama başlatılamadı: Firebase ayarları eksik veya hatalı.");
+            }
+        } catch (error) {
+            console.error("Firebase başlangıç hatası:", error);
+            showModal("Hata", "Uygulama başlatılamadı: Firebase hatası.");
+        }
+
+
+        // Tarih formatlama fonksiyonu (YYYY-MM-DD -> DD.MM.YYYY)
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const [year, month, day] = dateString.split('-');
+            return `${day}.${month}.${year}`;
+        }
+        
+        // Veri Kaydetme İşlemi
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!isAuthReady || !userId) {
+                showModal("Hata", "Oturum açılmamış veya veriler yükleniyor, lütfen bekleyin.");
+                return;
+            }
+
+            submitButton.disabled = true;
+            loadingSpinner.classList.remove('hidden');
+
+            const date = document.getElementById('date').value;
+            const subject = document.getElementById('subject').value;
+            const correct = parseInt(document.getElementById('correct').value) || 0;
+            const wrong = parseInt(document.getElementById('wrong').value) || 0;
+            const empty = parseInt(document.getElementById('empty').value) || 0;
+            
+            if (!date || !subject || subject === "") {
+                showModal("Uyarı", "Lütfen bir tarih ve ders seçimi yapın.");
+                submitButton.disabled = false;
+                loadingSpinner.classList.add('hidden');
+                return;
+            }
+
+            if (correct < 0 || wrong < 0 || empty < 0) {
+                 showModal("Uyarı", "Sayılar sıfırdan küçük olamaz.");
+                 submitButton.disabled = false;
+                 loadingSpinner.classList.add('hidden');
+                 return;
+            }
+
+            const total = correct + wrong + empty;
+            if (total === 0) {
+                showModal("Uyarı", "Doğru, yanlış ve boş toplamı 0 olamaz. Lütfen değerleri girin.");
+                 submitButton.disabled = false;
+                 loadingSpinner.classList.add('hidden');
+                 return;
+            }
+
+            try {
+                const testData = {
+                    date: date,
+                    subject: subject,
+                    correct: correct,
+                    wrong: wrong,
+                    empty: empty,
+                    total: total,
+                    timestamp: serverTimestamp()
+                };
+
+                const collectionPath = `artifacts/${appId}/users/${userId}/test_tracker`;
+                await addDoc(collection(db, collectionPath), testData);
+                
+                form.reset();
+                document.getElementById('date').valueAsDate = new Date();
+                document.getElementById('correct').value = 0;
+                document.getElementById('wrong').value = 0;
+                document.getElementById('empty').value = 0;
+
+                showModal("Başarılı", `<strong>${formatDate(date)}</strong> tarihinde <strong>${subject}</strong> dersi için <strong>${total} soruluk</strong> giriş başarıyla kaydedildi.`);
+            } catch (error) {
+                console.error("Veri kaydetme hatası: ", error);
+                showModal("Hata", "Veri kaydedilirken bir sorun oluştu. Konsolu kontrol edin.");
+            } finally {
+                submitButton.disabled = false;
+                loadingSpinner.classList.add('hidden');
+            }
+        });
+
+        // Veri Çekme İşlemi
+        function setupDataListener() {
+            if (!db || !userId) return;
+
+            // Önceki listener'ları temizlemek faydalı olabilir, ancak onAuthStateChanged zaten tekrar tekrar çağrılmadığı için genellikle sorun olmaz.
+            // Yeni bir snapshot listener kurulur.
+            const collectionPath = `artifacts/${appId}/users/${userId}/test_tracker`;
+            const q = query(collection(db, collectionPath), orderBy("date", "desc"));
+
+            onSnapshot(q, (snapshot) => {
+                const testEntries = [];
+                snapshot.forEach((doc) => {
+                    testEntries.push({ id: doc.id, ...doc.data() });
+                });
+                renderResults(testEntries);
+            }, (error) => {
+                console.error("Veri çekme hatası: ", error);
+                loadingMessage.textContent = "Veriler yüklenirken bir hata oluştu. Lütfen konsolu kontrol edin.";
+                showModal("Hata", "Test sonuçları çekilirken bir sorun oluştu. Hata mesajı için konsolu kontrol edin.");
+            });
+        }
+        
+        // GİZLİ KAYITLARI GÖSTER/GİZLE FONKSİYONU
+        window.toggleDayEntries = function(date) {
+            const hiddenContainer = document.getElementById(`hidden-entries-${date}`);
+            const toggleButton = document.getElementById(`toggle-button-${date}`);
+            
+            if (hiddenContainer.classList.contains('hidden')) {
+                hiddenContainer.classList.remove('hidden');
+                toggleButton.textContent = '▲ Kapat';
+                toggleButton.classList.remove('text-indigo-500');
+                toggleButton.classList.add('text-red-500');
+            } else {
+                hiddenContainer.classList.add('hidden');
+                const count = parseInt(toggleButton.dataset.count);
+                toggleButton.textContent = `... ${count} Kayıt Daha Göster`;
+                toggleButton.classList.remove('text-red-500');
+                toggleButton.classList.add('text-indigo-500');
+            }
+        }
+
+
+        // Sonuçları Tarihe Göre Gruplayıp Yatay Kolonlar Halinde Render Etme
+        function renderResults(entries) {
+            loadingMessage.classList.add('hidden');
+            resultsContainer.innerHTML = '';
+            
+            if (entries.length === 0) {
+                resultsContainer.innerHTML = '<div class="w-full flex justify-center items-center"><p class="text-center text-gray-500 p-8 bg-white rounded-xl shadow-inner w-full max-w-sm">Henüz kayıtlı test sonucunuz yok. Yukarıdaki formu kullanarak ilk kaydınızı oluşturun!</p></div>';
+                return;
+            }
+
+            const groupedByDate = entries.reduce((acc, entry) => {
+                (acc[entry.date] = acc[entry.date] || []).push(entry);
+                return acc;
+            }, {});
+
+            const sortedDates = Object.keys(groupedByDate).sort().reverse();
+
+            sortedDates.forEach(date => {
+                const dateColumn = document.createElement('div');
+                dateColumn.className = 'w-72 flex-shrink-0 bg-white border border-gray-200 rounded-xl shadow-md p-4 space-y-3';
+                
+                const dateHeader = document.createElement('h3');
+                let headerText = formatDate(date);
+                const today = new Date().toISOString().split('T')[0];
+                const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split('T')[0];
+
+                if (date === today) {
+                    headerText = `BUGÜN (${headerText}) <span class="text-green-500 text-base">★</span>`;
+                    dateColumn.classList.add('border-indigo-500', 'border-2', 'shadow-xl');
+                } else if (date === yesterday) {
+                    headerText = `DÜN (${headerText})`;
+                }
+
+                dateHeader.className = 'text-lg font-bold text-gray-800 border-b pb-2 mb-3';
+                dateHeader.innerHTML = headerText;
+                dateColumn.appendChild(dateHeader);
+                
+                // Eklenme zamanına göre (timestamp) sırala (en son eklenen üste)
+                const sortedEntries = groupedByDate[date].sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+                
+                const visibleEntries = sortedEntries.slice(0, 3);
+                const hiddenEntries = sortedEntries.slice(3);
+
+                // GÖRÜNÜR KAYITLAR (İlk 3)
+                visibleEntries.forEach(entry => {
+                    dateColumn.appendChild(createEntryCard(entry, date));
+                });
+
+                // GİZLİ KAYITLAR (4. ve sonrası)
+                if (hiddenEntries.length > 0) {
+                    const hiddenDiv = document.createElement('div');
+                    hiddenDiv.id = `hidden-entries-${date}`;
+                    hiddenDiv.className = 'hidden space-y-3 pt-3 border-t border-gray-200'; // Başlangıçta gizli
+                    
+                    hiddenEntries.forEach(entry => {
+                        hiddenDiv.appendChild(createEntryCard(entry, date));
+                    });
+                    dateColumn.appendChild(hiddenDiv);
+
+                    // DAHA FAZLA GÖSTER BUTONU
+                    const toggleButton = document.createElement('button');
+                    toggleButton.id = `toggle-button-${date}`;
+                    toggleButton.dataset.count = hiddenEntries.length;
+                    toggleButton.className = 'w-full text-center text-sm font-semibold text-indigo-500 hover:text-indigo-700 transition duration-150 pt-2';
+                    toggleButton.textContent = `... ${hiddenEntries.length} Kayıt Daha Göster`;
+                    toggleButton.onclick = () => toggleDayEntries(date);
+                    dateColumn.appendChild(toggleButton);
+                }
+
+                resultsContainer.appendChild(dateColumn);
+            });
+            
+            // Yeni veriler yüklendiğinde ve panonun içeriği değiştiğinde en yeni güne (sağa) kaydır.
+            const dashboardContainer = document.getElementById('dashboardContainer');
+            dashboardContainer.scrollLeft = dashboardContainer.scrollWidth;
+        }
+        
+        // Tek bir test giriş kartı oluşturan yardımcı fonksiyon
+        function createEntryCard(entry, date) {
+            const entryDiv = document.createElement('div');
+            entryDiv.id = `entry-${entry.id}`;
+            entryDiv.className = 'p-3 rounded-lg bg-gray-50 border border-gray-100 transition duration-150 shadow-sm hover:shadow-md';
+            
+            const total = entry.total; // total zaten hesaplanıp kaydedilmiş
+            const successRate = ((entry.correct / total) * 100).toFixed(1);
+
+            entryDiv.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <p class="text-base font-semibold text-indigo-700 leading-tight">${entry.subject}</p>
+                    <button onclick="confirmDelete('${entry.id}', '${entry.subject}', ${total}, '${date}')" 
+                            class="text-gray-400 hover:text-red-600 transition duration-150 p-1 rounded-full flex-shrink-0"
+                            title="Kaydı Sil">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
+                <div class="flex justify-between text-sm font-medium text-gray-700">
+                    <span>Toplam Soru:</span> <span class="font-bold">${total}</span>
+                </div>
+                <div class="flex justify-between text-sm font-bold ${successRate >= 75 ? 'text-green-600' : successRate >= 50 ? 'text-yellow-600' : 'text-red-600'}">
+                    <span>Başarı Oranı:</span> <span class="font-bold">${successRate}%</span>
+                </div>
+                <div class="grid grid-cols-3 gap-1 mt-2 text-xs text-center">
+                    <span class="bg-green-100 text-green-800 p-1 rounded-md">D: ${entry.correct}</span>
+                    <span class="bg-red-100 text-red-800 p-1 rounded-md">Y: ${entry.wrong}</span>
+                    <span class="bg-yellow-100 text-yellow-800 p-1 rounded-md">B: ${entry.empty}</span>
+                </div>
+            `;
+            return entryDiv;
+        }
+        
+        // Silme Onay Modalı
+        window.confirmDelete = function(id, subject, total, date) {
+            const modal = document.getElementById('messageModal');
+            const content = document.getElementById('modalContent');
+            document.getElementById('modalTitle').textContent = "Kaydı Sil Onayı";
+            document.getElementById('modalMessage').innerHTML = `
+                <p class="text-gray-700 mb-4">
+                    <strong>${formatDate(date)}</strong> tarihli <strong>${subject}</strong> dersine ait <strong>${total} soruluk</strong> kaydı silmek istediğinizden emin misiniz?
+                </p>
+                <div class="flex justify-end space-x-3">
+                    <button onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">İptal</button>
+                    <button onclick="deleteEntry('${id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Evet, Sil</button>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+             setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        // Silme İşlemi
+        window.deleteEntry = async function(id) {
+            closeModal();
+            if (!db || !userId) {
+                showModal("Hata", "Veritabanı bağlantısı hazır değil.");
+                return;
+            }
+            try {
+                const collectionPath = `artifacts/${appId}/users/${userId}/test_tracker`;
+                await deleteDoc(doc(db, collectionPath, id));
+                showModal("Başarılı", "Kayıt başarıyla silindi.");
+            } catch (error) {
+                console.error("Kayıt silme hatası: ", error);
+                showModal("Hata", "Kayıt silinirken bir sorun oluştu. Konsolu kontrol edin.");
+            }
+        }
+        
+        // Uygulama yüklendiğinde bugünün tarihini varsayılan olarak ayarla
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            
+            document.getElementById('date').value = `${year}-${month}-${day}`;
+        });
+
+    </script>
+</body>
+</html>
+
