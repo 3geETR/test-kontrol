@@ -9,6 +9,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # Kodu okumak için gerekli
+      pages: write   # GitHub Pages'e yazmak için gerekli
+      id-token: write # OIDC belirtecini talep etmek için gerekli (Hatanın Çözümü)
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
