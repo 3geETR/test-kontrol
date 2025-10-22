@@ -510,9 +510,7 @@
             // Yeni bir snapshot listener kurulur.
             const collectionPath = `artifacts/${appId}/users/${userId}/test_tracker`;
             
-            // HATA DÜZELTME: İkinci orderBy("timestamp", "desc") kaldırıldı.
-            // Bu, bileşik indeks gereksinimini ortadan kaldırarak Firestore okuma hatasını çözer.
-            // YYYY-MM-DD string formatında sıralama yeterli olacaktır.
+            // YYYY-MM-DD formatında sıralama
             const q = query(collection(db, collectionPath), orderBy("date", "desc")); 
 
             onSnapshot(q, (snapshot) => {
@@ -569,15 +567,15 @@
                 return acc;
             }, {});
 
-            const sortedDates = Object.keys(groupedByDate).sort().reverse();
+            // DÜZELTME: En eski tarih solda, en yeni tarih (BUGÜN) sağda olacak şekilde sırala.
+            // Bu sayede sayfa yüklendiğinde sağa kaydırma yapıldığında BUGÜN görünür.
+            const sortedDates = Object.keys(groupedByDate).sort(); 
 
             sortedDates.forEach(date => {
                 const dateColumn = document.createElement('div');
                 dateColumn.className = 'w-72 flex-shrink-0 bg-white border border-gray-200 rounded-xl shadow-md p-4 space-y-3';
                 
                 // groupedByDate[date] dizisi şu an sadece Firestore'dan gelme sırasına göre sıralıdır.
-                // İstenirse aynı gün içindeki kayıtları zaman damgasına göre JavaScript içinde sıralayabiliriz,
-                // ancak şimdilik Firestore'dan gelen sıralamayı kullanıyoruz.
                 const sortedEntries = groupedByDate[date]; 
                 
                 // Günlük Toplam Soru Sayısını Hesapla
@@ -638,9 +636,21 @@
                 resultsContainer.appendChild(dateColumn);
             });
             
+            // >>>>>> BURASI KAYDIRMA DÜZELTMESİ <<<<<<
             // Yeni veriler yüklendiğinde ve panonun içeriği değiştiğinde en yeni güne (sağa) kaydır.
             const dashboardContainer = document.getElementById('dashboardContainer');
-            dashboardContainer.scrollLeft = dashboardContainer.scrollWidth;
+            
+            // DÜZELTME: DOM'un tüm sütunları render etmesi için küçük bir gecikme ekliyoruz.
+            setTimeout(() => {
+                // Maksimum kaydırma mesafesi = İçerik Genişliği - Görüntü Alanı Genişliği
+                const maxScrollLeft = dashboardContainer.scrollWidth - dashboardContainer.clientWidth;
+                
+                // Kaydırmayı gerçekleştir (tarayıcı bunu maxScrollLeft'e kadar kısıtlar)
+                if (maxScrollLeft > 0) {
+                    dashboardContainer.scrollLeft = maxScrollLeft;
+                }
+            }, 50); // 50ms, bileşenlerin yerleşmesi için yeterli olmalıdır.
+            // >>>>>> KAYDIRMA DÜZELTMESİ SONU <<<<<<
         }
         
         // Tek bir test giriş kartı oluşturan yardımcı fonksiyon
@@ -830,7 +840,7 @@
             allInputs.forEach(id => {
                 const input = document.getElementById(id);
                 if (input) {
-                    // Odaklanıldığında ve değer '0' ise içeriği temizle
+                    // Odaklanıldığında ve değeri '0' ise içeriği temizle
                     input.addEventListener('focus', function() {
                         // Eğer input bir sayı inputuysa ve değeri 0 ise temizle
                         if (this.type === 'number' && parseInt(this.value) === 0) {
